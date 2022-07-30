@@ -35,6 +35,8 @@ export class LexicalStream {
   line = 0;
   col = 0;
 
+  currToken: Token | null;
+
   static validKeywords = [
     // Conditionals
     "if",
@@ -64,22 +66,22 @@ export class LexicalStream {
    */
   constructor(private readonly source: string) {}
 
-  // Group 1: input stream helpers
-  public eof() {
+  // 💡 Group 1: private input stream helpers
+  private eofRaw() {
     // charAt returns "" when out of bounds
-    return this.peekNext() === "";
+    return this.peekRaw() === "";
   }
 
-  public peekNext(): string {
+  private peekRaw(): string {
     return this.source.charAt(this.pos);
   }
 
-  public peekPrevious(): string {
+  private previousRaw(): string {
     if (this.pos === 0) return "";
     return this.source.charAt(this.pos - 1);
   }
 
-  public next(): string {
+  private nextRaw(): string {
     const nextChar = this.source.charAt(this.pos++);
     if (nextChar === "\n") {
       this.line++, (this.col = 0);
@@ -89,7 +91,7 @@ export class LexicalStream {
     return nextChar;
   }
 
-  // Group 2: tokenizer helpers
+  // 🔨 Group 2: tokenizer helpers
   public static isWhiteSpace(char: string) {
     return /\s/.test(char);
   }
@@ -119,23 +121,27 @@ export class LexicalStream {
     return /[{}()[\].,:;]/.test(char);
   }
 
-  public readWhile(predicate: (char: string) => boolean): string[] {
-    let char = this.peekNext();
+  // 🔨 Group 3: token builders
+  private readWhile(predicate: (char: string) => boolean): string[] {
+    let char = this.peekRaw();
     const accumulation = [];
     while (predicate(char)) {
       accumulation.push(char);
-      char = this.next();
+      char = this.nextRaw();
     }
     return accumulation;
   }
 
-  // Group 3: token builders
-  public readNumber(): Token {
+  private readNumber(): Token {
     const number = this.readWhile(LexicalStream.isNumber);
     const combined = number.join("");
     const dotCount = combined.match(/\./g)?.length ?? 0;
-    if (dotCount === 1 && combined.at(0) !== "." && combined.at(-1) !== ".") {
-      return new Token(TokenType.Float, Number.parseFloat(combined));
+    if (dotCount >= 1) {
+      if (dotCount === 1 && combined.at(0) !== "." && combined.at(-1) !== ".") {
+        return new Token(TokenType.Float, Number.parseFloat(combined));
+      } else {
+        throw new SyntaxError("Invalid float");
+      }
     } else {
       return new Token(TokenType.Int, Number.parseInt(combined, 10));
     }
@@ -144,23 +150,23 @@ export class LexicalStream {
   /**
    * @todo - make this more robust to catch invalid operators
    */
-  public readOperator(): Token {
+  private readOperator(): Token {
     const operator = this.readWhile(LexicalStream.isOperator);
     return new Token(TokenType.Op, operator.join(""));
   }
 
-  public readString(): Token {
+  private readString(): Token {
     // skip the opening and closing quotes, get bulk of string
-    this.next();
+    this.nextRaw();
     // accounts for escaped quotes
     const string = this.readWhile(
-      (char) => char !== '"' && this.peekPrevious() !== "\\"
+      (char) => char !== '"' && this.previousRaw() !== "\\"
     );
-    this.next();
+    this.nextRaw();
     return new Token(TokenType.StringLiteral, string.join(""));
   }
 
-  public readIdentifier(): Token {
+  private readIdentifier(): Token {
     const identifier = this.readWhile(LexicalStream.isIdentifierRest).join("");
     return new Token(
       LexicalStream.isKeyword(identifier)
@@ -170,15 +176,15 @@ export class LexicalStream {
     );
   }
 
-  public skipComment() {
+  private skipComment() {
     this.readWhile((char) => char !== "\n");
-    this.next();
+    this.nextRaw();
   }
 
   public readNext(): Token | null {
     this.readWhile(LexicalStream.isWhiteSpace);
-    if (this.eof()) return null;
-    const char = this.peekNext();
+    if (this.eofRaw()) return null;
+    const char = this.peekRaw();
     if (char === "#") {
       this.skipComment();
       return this.readNext();
@@ -188,7 +194,7 @@ export class LexicalStream {
     }
     // important for punctuation to go before number due to floats
     if (LexicalStream.isPunctuation(char)) {
-      return new Token(TokenType.Punc, this.next());
+      return new Token(TokenType.Punc, this.nextRaw());
     }
     if (LexicalStream.isIdentifierStart(char)) {
       return this.readIdentifier();
@@ -200,5 +206,21 @@ export class LexicalStream {
       return this.readOperator();
     }
     throw new SyntaxError(`Unexpected character: ${char}`);
+  }
+
+  // 🎏 Group 4: accessible token stream
+
+  public peek() {
+    return this.currToken || (this.currToken = this.readNext());
+  }
+
+  public next() {
+    const token = this.peek();
+    this.currToken = this.readNext();
+    return token;
+  }
+
+  public eof() {
+    return this.peek() === null;
   }
 }
