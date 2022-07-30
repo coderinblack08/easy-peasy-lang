@@ -6,12 +6,13 @@ In this project, there is a interpreter designed to run in the browser and a tra
 
 > Upcoming: Graphical block-language for developing Easy-Peasy programs.
 
-## Language Spec 
+## Language Spec
 
 All built-in variables are uppercase, including booleans; keywords are lowercase.
 
 - Variables & Built-in Data Types
-```
+
+```rb
 n = 0
 n = Int("0") # type-casting
 b = True
@@ -33,7 +34,8 @@ s = Set()
 ```
 
 - For and While Loops
-```
+
+```rb
 x = 10
 
 while x > 5
@@ -46,7 +48,8 @@ end
 ```
 
 - Conditionals
-```
+
+```rb
 x = 4
 if x > 5
   Print("X is extra long")
@@ -56,7 +59,8 @@ end
 ```
 
 - Functions
-```
+
+```rb
 func SplitEqually(num)
   a = Int(num / 2)
   b = num - a
@@ -65,7 +69,8 @@ end
 ```
 
 - Sprites (Objects)
-```
+
+```rb
 sprite Dog
   func Init(self, name, age)
     self.name = name
