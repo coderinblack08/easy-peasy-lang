@@ -1,14 +1,31 @@
 export enum TokenType {
-  StringLiteral = "str",
-  Identifier = "id",
-  Keyword = "kw",
-  Punc = "punc",
-  Op = "op",
-  Int = "int",
-  Float = "float",
-  // Boolean = "bool",
-  // Nil = "nil",
+  String = "String",
+  Id = "Identifier",
+  Kw = "Keyword",
+  Punc = "Punctuation",
+  Op = "Operator",
+  Int = "Integer",
+  Float = "Float",
+  // Bool = "Boolean",
+  // Nil = "Nil",
 }
+
+export const OP_PRECEDENCE = {
+  "=": 1,
+  "||": 2,
+  "&&": 3,
+  "<": 7,
+  ">": 7,
+  "<=": 7,
+  ">=": 7,
+  "==": 7,
+  "!=": 7,
+  "+": 10,
+  "-": 10,
+  "*": 20,
+  "/": 20,
+  "%": 20,
+};
 
 /**
  * Token
@@ -32,7 +49,7 @@ export class Token {
  */
 export class LexicalStream {
   pos = 0;
-  line = 0;
+  line = 1;
   col = 0;
 
   currToken: Token | null;
@@ -67,9 +84,9 @@ export class LexicalStream {
   constructor(private readonly source: string) {}
 
   // 💡 Group 1: private input stream helpers
-  private eofRaw() {
+  private hasNextRaw() {
     // charAt returns "" when out of bounds
-    return this.peekRaw() === "";
+    return this.peekRaw() !== "";
   }
 
   private peekRaw(): string {
@@ -93,7 +110,7 @@ export class LexicalStream {
 
   // 🔨 Group 2: tokenizer helpers
   public static isWhiteSpace(char: string) {
-    return /\s/.test(char);
+    return char !== "\n" && /\s/.test(char);
   }
 
   public static isNumber(char: string) {
@@ -118,16 +135,14 @@ export class LexicalStream {
   }
 
   public static isPunctuation(char: string) {
-    return /[{}()[\].,:;]/.test(char);
+    return /[{}()\[\].,:;]/.test(char);
   }
 
   // 🔨 Group 3: token builders
   private readWhile(predicate: (char: string) => boolean): string[] {
-    let char = this.peekRaw();
     const accumulation = [];
-    while (predicate(char)) {
-      accumulation.push(char);
-      char = this.nextRaw();
+    while (this.hasNextRaw() && predicate(this.peekRaw())) {
+      accumulation.push(this.nextRaw());
     }
     return accumulation;
   }
@@ -163,34 +178,45 @@ export class LexicalStream {
       (char) => char !== '"' && this.previousRaw() !== "\\"
     );
     this.nextRaw();
-    return new Token(TokenType.StringLiteral, string.join(""));
+    return new Token(TokenType.String, string.join(""));
   }
 
   private readIdentifier(): Token {
     const identifier = this.readWhile(LexicalStream.isIdentifierRest).join("");
     return new Token(
-      LexicalStream.isKeyword(identifier)
-        ? TokenType.Keyword
-        : TokenType.Identifier,
+      LexicalStream.isKeyword(identifier) ? TokenType.Kw : TokenType.Id,
       identifier
     );
   }
 
   private skipComment() {
     this.readWhile((char) => char !== "\n");
-    this.nextRaw();
+    return this.nextRaw();
   }
 
-  public readNext(): Token | null {
+  private readNext(): Token | null {
     this.readWhile(LexicalStream.isWhiteSpace);
-    if (this.eofRaw()) return null;
+    if (!this.hasNextRaw()) return null;
     const char = this.peekRaw();
     if (char === "#") {
-      this.skipComment();
-      return this.readNext();
+      if (this.col === 0) {
+        this.skipComment();
+        return this.readNext();
+      } else {
+        // comment at end of line, insert newline
+        return new Token(TokenType.Punc, this.skipComment());
+      }
     }
-    if (char == '"') {
+    if (char === '"') {
       return this.readString();
+    }
+    if (char === "\n") {
+      if (this.col !== 0) {
+        this.nextRaw();
+        return new Token(TokenType.Punc, "\n");
+      }
+      this.nextRaw();
+      return this.readNext();
     }
     // important for punctuation to go before number due to floats
     if (LexicalStream.isPunctuation(char)) {
@@ -205,22 +231,23 @@ export class LexicalStream {
     if (LexicalStream.isOperator(char)) {
       return this.readOperator();
     }
-    throw new SyntaxError(`Unexpected character: ${char}`);
+    throw new SyntaxError(`Unexpected character: ${char.charCodeAt(0)}`);
   }
 
   // 🎏 Group 4: accessible token stream
 
   public peek() {
-    return this.currToken || (this.currToken = this.readNext());
+    const curr = this.currToken || (this.currToken = this.readNext());
+    return curr;
   }
 
   public next() {
     const token = this.peek();
-    this.currToken = this.readNext();
+    this.currToken = null;
     return token;
   }
 
-  public eof() {
-    return this.peek() === null;
+  public hasNext() {
+    return this.peek() !== null;
   }
 }

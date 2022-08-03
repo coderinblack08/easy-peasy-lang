@@ -12,7 +12,7 @@ All built-in variables are uppercase, including booleans; keywords are lowercase
 
 - Variables & Built-in Data Types
 
-```rb
+```py
 n = 0
 n = Int("0") # type-casting
 b = True
@@ -25,9 +25,9 @@ l.Add("first element")
 l.Add("second element")
 l.Pop()
 
-Print(l.At(0))
-Print(l.At(1))
-Print(l.At(-1))
+Out(l.At(0))
+Out(l.At(1))
+Out(l.At(-1))
 
 m = Map()
 s = Set()
@@ -35,32 +35,34 @@ s = Set()
 
 - For and While Loops
 
-```rb
+```py
 x = 10
 
 while x > 5
-  Print("X is very long")
+  Out("X is very long")
 end
 
 for i in Range(1, 5)
-  print(i)
+  Out(i)
 end
 ```
 
 - Conditionals
 
-```rb
+```py
 x = 4
 if x > 5
-  Print("X is extra long")
+  Out("X is extra long")
+elif x > 4
+  Out("X is average length")
 else
-  print("X is way too small for my liking")
+  Out("X is way too small for my liking")
 end
 ```
 
 - Functions
 
-```rb
+```py
 func SplitEqually(num)
   a = Int(num / 2)
   b = num - a
@@ -70,7 +72,7 @@ end
 
 - Sprites (Objects)
 
-```rb
+```py
 sprite Dog
   func Init(self, name, age)
     self.name = name
@@ -83,5 +85,5 @@ sprite Dog
 end
 
 dog = Dog("clifford", 5)
-Print(dog.GetHumanAge());
+Out(dog.GetHumanAge());
 ```
