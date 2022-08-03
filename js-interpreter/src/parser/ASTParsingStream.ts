@@ -130,8 +130,8 @@ export class ASTParsingStream {
     return this.maybeCall(() => this.maybeBinary(this.parseAtom(), 0));
   }
 
-  private parseAtom(checkForCalls = true): any {
-    const cb = () => {
+  private parseAtom(): any {
+    return this.maybeCall(() => {
       // needed for maybeBinary
       if (this.isPunctuation("(")) {
         this.skipPunctuation("(");
@@ -160,8 +160,7 @@ export class ASTParsingStream {
       )
         return token;
       throw new SyntaxError(`Unexpected token ${token?.value}`);
-    };
-    return checkForCalls ? this.maybeCall(cb) : cb;
+    });
   }
 
   // maybe* functions are used to determine whether or not a certain parser should be called, for example a function call
@@ -238,24 +237,27 @@ export class ASTParsingStream {
     const condition = this.parseExpression();
     // could be newline or space
     // should parse blocks separately with parseBlock
-    const then = this.parseExpressionOrBlock(["else", "elif"]);
+    const then = this.parseExpressionOrBlock(["else", "elif", "end"]);
     let node: Record<string, any> = { type: "if", condition, then };
-    let finalAlternative = node;
+    let deepestAlternative = node;
     const checkForElif = (): any => {
       if (this.isKeyword("elif")) {
         this.skipKeyword("elif");
         const alternativeExpression = this.parseExpression();
-        const alternativeThen = this.parseExpressionOrBlock(["else", "elif"]);
+        const alternativeThen = this.parseExpressionOrBlock([
+          "else",
+          "elif",
+          "end",
+        ]);
         const alternative = checkForElif();
-        if (alternative) {
-          finalAlternative = alternative;
-          return {
-            type: "if",
-            condition: alternativeExpression,
-            then: alternativeThen,
-            alternative,
-          };
-        }
+        const currNode = {
+          type: "if",
+          condition: alternativeExpression,
+          then: alternativeThen,
+          alternative,
+        };
+        deepestAlternative = currNode;
+        return currNode;
       }
       return null;
     };
@@ -263,8 +265,8 @@ export class ASTParsingStream {
     if (this.isKeyword("else")) {
       this.skipKeyword("else");
       const elseNode = this.parseExpressionOrBlock();
-      finalAlternative.alternative = {
-        type: "if",
+      deepestAlternative.alternative = {
+        type: "else",
         then: elseNode,
       };
     }
