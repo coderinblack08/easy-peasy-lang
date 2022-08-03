@@ -42,12 +42,20 @@ export class ASTParsingStream {
     return block;
   }
 
-  private parseExpressionOrBlock(endKeywords = ["end"]) {
+  private parseExpressionOrBlock(args?: {
+    convertInlineToReturn?: boolean;
+    endKeywords?: string[];
+  }) {
+    const { convertInlineToReturn = false, endKeywords = ["end"] } = args || {};
     if (this.isPunctuation("\n")) {
       this.skipPunctuation("\n");
       return this.parseBlock(endKeywords);
     } else {
-      return this.parseExpression();
+      if (convertInlineToReturn) {
+        return this.parseReturn();
+      } else {
+        return this.parseExpression();
+      }
     }
   }
 
@@ -245,7 +253,7 @@ export class ASTParsingStream {
         ",",
         ASTParsingStream.parseIdentifierName
       ),
-      body: this.parseExpressionOrBlock(),
+      body: this.parseExpressionOrBlock({ convertInlineToReturn: true }),
     };
   }
 
@@ -268,18 +276,18 @@ export class ASTParsingStream {
     const condition = this.parseExpression();
     // could be newline or space
     // should parse blocks separately with parseBlock
-    const then = this.parseExpressionOrBlock(["else", "elif", "end"]);
+    const then = this.parseExpressionOrBlock({
+      endKeywords: ["else", "elif", "end"],
+    });
     let node: Record<string, any> = { type: "if", condition, then };
     let deepestAlternative = node;
     const checkForElif = (): any => {
       if (this.isKeyword("elif")) {
         this.skipKeyword("elif");
         const alternativeExpression = this.parseExpression();
-        const alternativeThen = this.parseExpressionOrBlock([
-          "else",
-          "elif",
-          "end",
-        ]);
+        const alternativeThen = this.parseExpressionOrBlock({
+          endKeywords: ["else", "elif", "end"],
+        });
         const alternative = checkForElif();
         const currNode = {
           type: "if",

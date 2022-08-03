@@ -3,9 +3,13 @@ import { ASTParsingStream } from "./parser/ASTParsingStream";
 import { LexicalStream } from "./parser/LexicalStream";
 
 const program = `
+# Block function
 func Sum(x, y)
   return x + y
 end
+
+# Inline function, automatically returns the singular expression
+func Subtract(x, y) x - y
 
 if x > 4
   Out("x is greater than 4")
