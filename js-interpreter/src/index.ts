@@ -15,6 +15,11 @@ else
   Out("x is equal to 4")
 end
 
+y = True
+x = !(False || !False) && !False
+z = -48 # negation?
+
+Out(1 + 2 - 3) # addition and subtraction
 Out(5 + 3 * 6 / 9) # arithmetic expression
 Out(Sum(1, 2)) # returns 3
 `;

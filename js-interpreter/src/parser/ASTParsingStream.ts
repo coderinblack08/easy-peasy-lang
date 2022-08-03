@@ -85,6 +85,14 @@ export class ASTParsingStream {
     }
   }
 
+  private skipOperation(op: string) {
+    if (this.isOperation(op)) {
+      this.stream.next();
+    } else {
+      throw new SyntaxError(`Expected operation ${op}`);
+    }
+  }
+
   private skipPunctuation(punc: string) {
     if (this.isPunctuation(punc)) {
       this.stream.next();
@@ -139,6 +147,23 @@ export class ASTParsingStream {
         this.skipPunctuation(")");
         return expr;
       }
+      // unary operations
+      if (this.isOperation("!")) {
+        this.skipOperation("!");
+        return {
+          type: "unary",
+          op: "!",
+          expr: this.parseAtom(),
+        };
+      }
+      if (this.isOperation("-")) {
+        this.skipOperation("-");
+        return {
+          type: "unary",
+          op: "-",
+          expr: this.parseAtom(),
+        };
+      }
       if (this.isKeyword("if")) return this.parseConditional();
       if (this.isKeyword("True") || this.isKeyword("False"))
         return this.parseBoolean();
@@ -172,15 +197,15 @@ export class ASTParsingStream {
   /**
    * @param left left side of expression
    * @param precedence precedence of current operator
+   * @link https://en.wikipedia.org/wiki/Operator-precedence_parser
    * @returns complete binary node
    */
   private maybeBinary(left: object, precedence: number): object {
     const op = this.isOperation();
-    // example 1: [0] 1 + [10] 2 * [20] 3
-    // example 2: 2 * 3 + 4
     if (op) {
       const currentPrecedence =
         OP_PRECEDENCE[op.value as keyof typeof OP_PRECEDENCE];
+      // const isUnary = this.isOperation("!");
       if (currentPrecedence > precedence) {
         this.stream.next();
         const right = this.maybeBinary(this.parseAtom(), currentPrecedence);
@@ -190,6 +215,12 @@ export class ASTParsingStream {
           left: left,
           right: right,
         };
+        // if (isUnary) {
+        //   return this.maybeBinary(
+        //     { type: "unary", op: op.value, body: right },
+        //     precedence
+        //   );
+        // }
         return this.maybeBinary(binary, precedence);
       }
     }

@@ -16,15 +16,19 @@ export const OP_PRECEDENCE = {
   "&&": 3,
   "<": 7,
   ">": 7,
+
   "<=": 7,
   ">=": 7,
   "==": 7,
   "!=": 7,
+
   "+": 10,
   "-": 10,
   "*": 20,
   "/": 20,
   "%": 20,
+
+  "!": 30,
 };
 
 /**
@@ -147,6 +151,7 @@ export class LexicalStream {
     return accumulation;
   }
 
+  // negative numbers suck, handle them as unary operators inside the AST
   private readNumber(): Token {
     const number = this.readWhile(LexicalStream.isNumber);
     const combined = number.join("");
