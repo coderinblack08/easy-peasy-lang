@@ -1,4 +1,4 @@
-import { inspect } from "util";
+// import { inspect } from "util";
 import { Environment } from "./environment/Environment";
 import { Interpreter } from "./environment/Interpreter";
 import { ASTParsingStream } from "./parser/ASTParsingStream";
@@ -27,6 +27,17 @@ y = True
 x = !(False || !False) && !False
 z = -48 # negation?
 
+# recursive function calls!
+func fib(n)
+  if n < 2
+    return n
+  else
+    return fib(n - 1) + fib(n - 2)
+  end
+end
+
+Out(fib(10))
+
 Out(1 + 2 - 3) # addition and subtraction
 Out(5 + 3 * 6 / 9) # arithmetic expression
 
@@ -44,13 +55,13 @@ const lexer = new LexicalStream(program);
 const parser = new ASTParsingStream(lexer);
 const ast = parser.parseTopLevel();
 
-console.log(
-  inspect(ast, {
-    showHidden: false,
-    depth: null,
-    colors: true,
-  })
-);
+// console.log(
+//   inspect(ast, {
+//     showHidden: false,
+//     depth: null,
+//     colors: true,
+//   })
+// );
 
 const globalEnv = new Environment();
 

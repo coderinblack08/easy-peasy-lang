@@ -138,11 +138,12 @@ export class Interpreter {
         if (cond !== false) return this.run(exp.then, scope);
         let chain = exp;
         while (true) {
-          if (chain.hasOwnProperty("alternative")) {
+          if (chain && chain.hasOwnProperty("alternative")) {
             chain = chain.alternative;
             if (
-              chain.type === "Else" ||
-              this.run(chain.condition, scope) !== false
+              chain !== null &&
+              (chain.type === "Else" ||
+                this.run(chain.condition, scope) !== false)
             ) {
               return this.run(chain.then, scope);
             }
