@@ -20,7 +20,7 @@ export class ASTParsingStream {
       prog.push(exp);
       if (this.stream.hasNext()) this.skipPunctuation("\n");
     }
-    return { type: "prog", body: prog };
+    return { type: "Program", body: prog };
   }
 
   // parse blocks similar to how we parse at the top level
@@ -159,16 +159,16 @@ export class ASTParsingStream {
       if (this.isOperation("!")) {
         this.skipOperation("!");
         return {
-          type: "unary",
-          op: "!",
+          type: "Unary",
+          operator: "!",
           expr: this.parseAtom(),
         };
       }
       if (this.isOperation("-")) {
         this.skipOperation("-");
         return {
-          type: "unary",
-          op: "-",
+          type: "Unary",
+          operator: "-",
           expr: this.parseAtom(),
         };
       }
@@ -218,7 +218,7 @@ export class ASTParsingStream {
         this.stream.next();
         const right = this.maybeBinary(this.parseAtom(), currentPrecedence);
         const binary = {
-          type: op.value == "=" ? "assign" : "binary",
+          type: op.value == "=" ? "Assign" : "Binary",
           operator: op.value,
           left: left,
           right: right,
@@ -238,14 +238,14 @@ export class ASTParsingStream {
   private parseCall(func: string) {
     return {
       func,
-      type: "call",
+      type: "Call",
       args: this.parseByDelimiter("(", ")", ",", this.parseExpression),
     };
   }
 
   private parseFunction() {
     return {
-      type: "function",
+      type: "Function",
       name: ASTParsingStream.parseIdentifierName(this.stream),
       params: this.parseByDelimiter(
         "(",
@@ -259,14 +259,14 @@ export class ASTParsingStream {
 
   private parseBoolean() {
     return {
-      type: "bool",
+      type: "Boolean",
       value: this.stream.next()?.value === "True",
     };
   }
 
   private parseReturn() {
     return {
-      type: "return",
+      type: "Return",
       value: this.parseExpression(),
     };
   }
@@ -279,7 +279,7 @@ export class ASTParsingStream {
     const then = this.parseExpressionOrBlock({
       endKeywords: ["else", "elif", "end"],
     });
-    let node: Record<string, any> = { type: "if", condition, then };
+    let node: Record<string, any> = { type: "If", condition, then };
     let deepestAlternative = node;
     const checkForElif = (): any => {
       if (this.isKeyword("elif")) {
@@ -290,7 +290,7 @@ export class ASTParsingStream {
         });
         const alternative = checkForElif();
         const currNode = {
-          type: "if",
+          type: "If",
           condition: alternativeExpression,
           then: alternativeThen,
           alternative,
@@ -305,7 +305,7 @@ export class ASTParsingStream {
       this.skipKeyword("else");
       const elseNode = this.parseExpressionOrBlock();
       deepestAlternative.alternative = {
-        type: "else",
+        type: "Else",
         then: elseNode,
       };
     }
