@@ -1,0 +1,21 @@
+sprite List
+  func Init() 
+  func Add(value)
+  func Pop()
+  func At(index)
+end
+
+sprite Map
+  func Init()
+  func Add(key, value)
+  func Remove(key)
+  func At(key)
+  func Has(key)
+end
+
+sprite Set
+  func Init()
+  func Add(value)
+  func Remove(value)
+  func Has(value)
+end

@@ -10,6 +10,8 @@ In this project, there is a interpreter designed to run in the browser and a tra
 
 All built-in variables are uppercase, including booleans; keywords are lowercase.
 
+All exported functions within a file should be in uppercase (similar to Go)
+
 - Variables & Built-in Data Types
 
 ```py
