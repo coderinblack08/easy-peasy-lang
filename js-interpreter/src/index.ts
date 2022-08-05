@@ -1,10 +1,10 @@
 import { readFileSync } from "fs";
 import { join } from "path";
-import { inspect } from "util";
 import { Environment } from "./environment/Environment";
 import { Interpreter } from "./environment/Interpreter";
-import { ASTParsingStream } from "./parser/ASTParsingStream";
-import { LexicalStream, Token } from "./parser/LexicalStream";
+import { ParsingStream } from "./parser/ParsingStream";
+import { LexicalStream } from "./parser/LexicalStream";
+import { inspect } from "util";
 
 const program = readFileSync(join(__dirname, "../src/playground.ep"), "utf8");
 
@@ -19,16 +19,16 @@ const lexer = new LexicalStream(program);
 
 // console.log(tokens);
 
-const parser = new ASTParsingStream(lexer);
+const parser = new ParsingStream(lexer);
 const ast = parser.parseTopLevel();
 
-// console.log(
-//   inspect(ast, {
-//     showHidden: false,
-//     depth: null,
-//     colors: true,
-//   })
-// );
+console.log(
+  inspect(ast, {
+    showHidden: false,
+    depth: null,
+    colors: true,
+  })
+);
 
 const globalEnv = new Environment();
 

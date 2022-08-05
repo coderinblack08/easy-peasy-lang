@@ -5,7 +5,7 @@ import { LexicalStream, OP_PRECEDENCE, TokenType } from "./LexicalStream";
  * @link https://www.youtube.com/watch?v=SToUyjAsaFk&ab_channel=hhp3
  * In the fashion of a [Recursive Descent Parser](https://en.wikipedia.org/wiki/Recursive_descent_parser)
  */
-export class ASTParsingStream {
+export class ParsingStream {
   constructor(private readonly stream: LexicalStream) {
     this.parseExpression = this.parseExpression.bind(this);
     this.parseAtom = this.parseAtom.bind(this);
@@ -52,7 +52,7 @@ export class ASTParsingStream {
       return this.parseBlock(endKeywords);
     } else {
       if (convertInlineToReturn) {
-        return this.parseReturn();
+        return this.parseReturnWithoutSkipping();
       } else {
         return this.parseExpression();
       }
@@ -176,12 +176,14 @@ export class ASTParsingStream {
       if (this.isKeyword("True") || this.isKeyword("False"))
         return this.parseBoolean();
       if (this.isKeyword("func")) {
-        this.skipKeyword("func");
         return this.parseFunction();
       }
       if (this.isKeyword("return")) {
         this.skipKeyword("return");
-        return this.parseReturn();
+        return this.parseReturnWithoutSkipping();
+      }
+      if (this.isKeyword("while")) {
+        return this.parseWhile();
       }
       const token = this.stream.next();
       if (
@@ -244,14 +246,15 @@ export class ASTParsingStream {
   }
 
   private parseFunction() {
+    this.skipKeyword("func");
     return {
       type: "Function",
-      name: ASTParsingStream.parseIdentifierName(this.stream),
+      name: ParsingStream.parseIdentifierName(this.stream),
       params: this.parseByDelimiter(
         "(",
         ")",
         ",",
-        ASTParsingStream.parseIdentifierName
+        ParsingStream.parseIdentifierName
       ),
       body: this.parseExpressionOrBlock({ convertInlineToReturn: true }),
     };
@@ -264,11 +267,18 @@ export class ASTParsingStream {
     };
   }
 
-  private parseReturn() {
+  private parseReturnWithoutSkipping() {
     return {
       type: "Return",
       value: this.parseExpression(),
     };
+  }
+
+  private parseWhile() {
+    this.skipKeyword("while");
+    const condition = this.parseExpression();
+    const body = this.parseExpressionOrBlock({ endKeywords: ["end"] });
+    return { type: "While", condition, body };
   }
 
   private parseConditional() {

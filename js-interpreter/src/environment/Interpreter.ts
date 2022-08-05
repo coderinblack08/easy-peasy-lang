@@ -84,6 +84,14 @@ export class Interpreter {
     scope.set(exp.name, func.bind(this));
   }
 
+  private handleWhile(exp: any, scope: Environment) {
+    let cond = this.run(exp.condition, scope);
+    while (cond !== false) {
+      this.run(exp.body, scope);
+      cond = this.run(exp.condition, scope);
+    }
+  }
+
   public run(exp: any = this.ast, scope: Environment = this.env): any {
     if (Array.isArray(exp)) {
       for (const e of exp) {
@@ -97,6 +105,9 @@ export class Interpreter {
         case "String":
         case "Boolean":
           return exp.value;
+
+        case "While":
+          return this.handleWhile(exp, scope);
 
         case "Identifier":
           return scope.get(exp.value);

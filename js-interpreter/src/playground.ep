@@ -1,3 +1,7 @@
+Out(1 + 2 - 3) # addition and subtraction
+Out(5 + 3 * 6 / 9) # arithmetic expression
+
+# block function
 func Sum(x, y)
   return x + y
 end
@@ -5,8 +9,11 @@ end
 # Inline function, automatically returns the singular expression
 func Subtract(x, y) x - y
 
-n = 8
+Out(Sum(1, 2)) # returns 3
+Out(Subtract(8, 4)) # returns 4
 
+n = 8
+# simple if statements
 if n > 4
   Out("n is greater than 4")
 elif n < 4
@@ -15,15 +22,19 @@ else
   Out("n is equal to 4")
 end
 
-x = !(False || !False) && !False
-y = True
-z = -48 # negation?
+# boolean expressions
+x = True
+y = !(False || !False) && !False
+z = -48 # negation
 Out(x, y, z)
-if y || x
-  Out("y or x are true")
+if x || y
+  Out("x or y are true")
+end
 
 # recursive function calls
 # early returns as well
+# examples: fibonacci and factorial
+
 func fib(n)
   # Out(n)
   if n < 2
@@ -33,10 +44,21 @@ func fib(n)
   return fib(n - 1) + fib(n - 2)
 end
 
-Out(fib(10))
+Out(fib(10)) # 55
 
-Out(1 + 2 - 3) # addition and subtraction
-Out(5 + 3 * 6 / 9) # arithmetic expression
+func factorial(n)
+  if n < 2
+    return 1
+  end
+  return n * factorial(n - 1)
+end
 
-Out(Sum(1, 2)) # returns 3
-Out(Subtract(8, 4)) # returns 4
+Out(factorial(5)) # 120
+
+
+# simple while loop
+i = 0
+while i < 5
+  Out(i)
+  i = i + 1
+end
