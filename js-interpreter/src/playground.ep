@@ -1,0 +1,42 @@
+func Sum(x, y)
+  return x + y
+end
+
+# Inline function, automatically returns the singular expression
+func Subtract(x, y) x - y
+
+n = 8
+
+if n > 4
+  Out("n is greater than 4")
+elif n < 4
+  Out("n is less than 4")
+else
+  Out("n is equal to 4")
+end
+
+x = !(False || !False) && !False
+y = True
+z = -48 # negation?
+Out(x, y, z)
+if y || x
+  Out("y or x are true")
+
+# recursive function calls
+# early returns as well
+func fib(n)
+  # Out(n)
+  if n < 2
+    return n
+  end
+  # Out("fib(", n - 1, ") + fib(", n - 2, ")")
+  return fib(n - 1) + fib(n - 2)
+end
+
+Out(fib(10))
+
+Out(1 + 2 - 3) # addition and subtraction
+Out(5 + 3 * 6 / 9) # arithmetic expression
+
+Out(Sum(1, 2)) # returns 3
+Out(Subtract(8, 4)) # returns 4
