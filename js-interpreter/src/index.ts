@@ -1,8 +1,8 @@
-// import { inspect } from "util";
+import { inspect } from "util";
 import { Environment } from "./environment/Environment";
 import { Interpreter } from "./environment/Interpreter";
 import { ASTParsingStream } from "./parser/ASTParsingStream";
-import { LexicalStream } from "./parser/LexicalStream";
+import { LexicalStream, Token } from "./parser/LexicalStream";
 
 const program = `
 # Block function
@@ -23,17 +23,22 @@ else
   Out("n is equal to 4")
 end
 
-y = True
 x = !(False || !False) && !False
+y = True
 z = -48 # negation?
+Out(x, y, z)
+if y || x
+  Out("y or x are true")
 
-# recursive function calls!
+# recursive function calls
+# early returns as well
 func fib(n)
+  # Out(n)
   if n < 2
     return n
-  else
-    return fib(n - 1) + fib(n - 2)
   end
+  # Out("fib(", n - 1, ") + fib(", n - 2, ")")
+  return fib(n - 1) + fib(n - 2)
 end
 
 Out(fib(10))
@@ -46,12 +51,16 @@ Out(Subtract(8, 4)) # returns 4
 `;
 
 const lexer = new LexicalStream(program);
+
 // const tokens: Token[] = [];
 
 // while (lexer.hasNext()) {
 //   const token = lexer.next();
 //   token && tokens.push(token);
 // }
+
+// console.log(tokens);
+
 const parser = new ASTParsingStream(lexer);
 const ast = parser.parseTopLevel();
 

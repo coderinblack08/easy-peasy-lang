@@ -16,21 +16,17 @@ export const OP_PRECEDENCE = {
   "&&": 3,
   "<": 7,
   ">": 7,
-
   "<=": 7,
   ">=": 7,
   "==": 7,
   "!=": 7,
-
   "+": 10,
   "-": 10,
   "*": 20,
   "/": 20,
   "%": 20,
-
   "!": 30,
 };
-
 /**
  * Token
  * @class
@@ -55,6 +51,7 @@ export class LexicalStream {
   pos = 0;
   line = 1;
   col = 0;
+  newLine = true;
 
   currToken: Token | null;
 
@@ -156,6 +153,7 @@ export class LexicalStream {
     const number = this.readWhile(LexicalStream.isNumber);
     const combined = number.join("");
     const dotCount = combined.match(/\./g)?.length ?? 0;
+    this.newLine = false;
     if (dotCount >= 1) {
       if (dotCount === 1 && combined.at(0) !== "." && combined.at(-1) !== ".") {
         return new Token(TokenType.Float, Number.parseFloat(combined));
@@ -172,6 +170,7 @@ export class LexicalStream {
    */
   private readOperator(): Token {
     const operator = this.readWhile(LexicalStream.isOperator);
+    this.newLine = false;
     return new Token(TokenType.Op, operator.join(""));
   }
 
@@ -183,11 +182,13 @@ export class LexicalStream {
       (char) => char !== '"' && this.previousRaw() !== "\\"
     );
     this.nextRaw();
+    this.newLine = false;
     return new Token(TokenType.String, string.join(""));
   }
 
   private readIdentifier(): Token {
     const identifier = this.readWhile(LexicalStream.isIdentifierRest).join("");
+    this.newLine = false;
     return new Token(
       LexicalStream.isKeyword(identifier) ? TokenType.Kw : TokenType.Id,
       identifier
@@ -204,11 +205,12 @@ export class LexicalStream {
     if (!this.hasNextRaw()) return null;
     const char = this.peekRaw();
     if (char === "#") {
-      if (this.col === 0) {
+      if (this.newLine) {
         this.skipComment();
         return this.readNext();
       } else {
         // comment at end of line, insert newline
+        this.newLine = true;
         return new Token(TokenType.Punc, this.skipComment());
       }
     }
@@ -216,8 +218,9 @@ export class LexicalStream {
       return this.readString();
     }
     if (char === "\n") {
-      if (this.col !== 0) {
+      if (!this.newLine) {
         this.nextRaw();
+        this.newLine = true;
         return new Token(TokenType.Punc, "\n");
       }
       this.nextRaw();
@@ -225,6 +228,7 @@ export class LexicalStream {
     }
     // important for punctuation to go before number due to floats
     if (LexicalStream.isPunctuation(char)) {
+      this.newLine = false;
       return new Token(TokenType.Punc, this.nextRaw());
     }
     if (LexicalStream.isIdentifierStart(char)) {
