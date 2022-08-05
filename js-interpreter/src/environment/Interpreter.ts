@@ -1,4 +1,3 @@
-import EventEmitter from "events";
 import { Environment } from "./Environment";
 
 export class Interpreter {
@@ -73,7 +72,6 @@ export class Interpreter {
   private makeFunction(exp: any, scope: Environment) {
     function func(this: Interpreter) {
       const funcScope = this.env.extend();
-      const ee = new EventEmitter();
       for (let i = 0; i < exp.params.length; ++i) {
         // array of arguments passed into this closure
         funcScope.def(
@@ -81,24 +79,15 @@ export class Interpreter {
           i < arguments.length ? arguments[i] : false
         );
       }
-      let output;
-      ee.once("return", (result: any) => {
-        output = result;
-      });
-      this.run(exp.body, funcScope, ee);
-      return output;
+      return this.run(exp.body, funcScope);
     }
     scope.set(exp.name, func.bind(this));
   }
 
-  public run(
-    exp: any = this.ast,
-    scope: Environment = this.env,
-    ee?: EventEmitter
-  ): any {
+  public run(exp: any = this.ast, scope: Environment = this.env): any {
     if (Array.isArray(exp)) {
       for (const e of exp) {
-        const output = this.run(e, scope, ee);
+        const output = this.run(e, scope);
         if (output !== undefined) return output;
       }
     } else {
@@ -118,38 +107,36 @@ export class Interpreter {
               "Left hand side of an assignment must be an identifier"
             );
           }
-          return scope.set(exp.left.value, this.run(exp.right, scope, ee));
+          return scope.set(exp.left.value, this.run(exp.right, scope));
 
         case "Binary":
           return this.applyOperation(
             exp.operator,
-            this.run(exp.left, scope, ee),
-            this.run(exp.right, scope, ee)
+            this.run(exp.left, scope),
+            this.run(exp.right, scope)
           );
 
         case "Unary":
-          return this.applyUnary(exp.operator, this.run(exp.expr, scope, ee));
+          return this.applyUnary(exp.operator, this.run(exp.expr, scope));
 
         case "Function":
           return this.makeFunction(exp, scope);
 
         case "Call":
-          const func: any = this.run(exp.func, scope, ee);
+          const func: any = this.run(exp.func, scope);
           return func.apply(
             this,
-            exp.args.map((arg: any[]) => this.run(arg, scope, ee))
+            exp.args.map((arg: any[]) => this.run(arg, scope))
           );
 
         case "Program":
           let value = false;
-          exp.body.forEach(
-            (child: any) => (value = this.run(child, scope, ee))
-          );
+          exp.body.forEach((child: any) => (value = this.run(child, scope)));
           return value;
 
         case "If":
-          let cond = this.run(exp.condition, scope, ee);
-          if (cond !== false) return this.run(exp.then, scope, ee);
+          let cond = this.run(exp.condition, scope);
+          if (cond !== false) return this.run(exp.then, scope);
           let chain = exp;
           while (true) {
             if (chain && chain.hasOwnProperty("alternative")) {
@@ -157,9 +144,9 @@ export class Interpreter {
               if (
                 chain !== null &&
                 (chain.type === "Else" ||
-                  this.run(chain.condition, scope, ee) !== false)
+                  this.run(chain.condition, scope) !== false)
               ) {
-                return this.run(chain.then, scope, ee);
+                return this.run(chain.then, scope);
               } else {
                 break;
               }
@@ -170,9 +157,7 @@ export class Interpreter {
           break;
 
         case "Return":
-          const result = this.run(exp.value, scope, ee);
-          ee?.emit("return", result);
-          return result;
+          return this.run(exp.value, scope);
 
         default:
           throw new Error("Can't evaluate " + JSON.stringify(exp));
