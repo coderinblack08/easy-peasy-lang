@@ -89,7 +89,7 @@ export class ASTParsingStream {
     if (this.isKeyword(keyword)) {
       this.stream.next();
     } else {
-      throw new SyntaxError(`Expected keyword ${keyword}`);
+      throw new SyntaxError(`Expected keyword "${keyword}"`);
     }
   }
 
@@ -97,7 +97,7 @@ export class ASTParsingStream {
     if (this.isOperation(op)) {
       this.stream.next();
     } else {
-      throw new SyntaxError(`Expected operation ${op}`);
+      throw new SyntaxError(`Expected operation "${op}"`);
     }
   }
 
@@ -105,7 +105,7 @@ export class ASTParsingStream {
     if (this.isPunctuation(punc)) {
       this.stream.next();
     } else {
-      throw new SyntaxError(`Expected punctuation ${punc}`);
+      throw new SyntaxError(`Expected punctuation "${punc}"`);
     }
   }
 

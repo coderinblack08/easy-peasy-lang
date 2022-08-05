@@ -54,6 +54,7 @@ export class LexicalStream {
   newLine = true;
 
   currToken: Token | null;
+  source: string;
 
   static validKeywords = [
     // Conditionals
@@ -82,7 +83,9 @@ export class LexicalStream {
   /**
    * @param source - program to be parsed
    */
-  constructor(private readonly source: string) {}
+  constructor(source: string) {
+    this.source = source.at(-1) === "\n" ? source : source + "\n";
+  }
 
   // 💡 Group 1: private input stream helpers
   private hasNextRaw() {
@@ -253,6 +256,7 @@ export class LexicalStream {
   public next() {
     const token = this.peek();
     this.currToken = null;
+
     return token;
   }
 
