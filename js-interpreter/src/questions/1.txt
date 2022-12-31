@@ -1,0 +1,22 @@
+1. What is the smallest positive number that is evenly divisible by all of the numbers from 1 to 20?
+
+Solution:
+func gcd(a, b)
+  if b == 0
+    return a
+  end
+  return gcd(b, a % b)
+end
+
+func lcm(a, b)
+  return a * b / gcd(a, b)
+end
+
+i = 1
+ans = 1
+while i <= 20
+  total = lcm(ans, i)
+  i = i + 1
+end
+
+Out(ans)

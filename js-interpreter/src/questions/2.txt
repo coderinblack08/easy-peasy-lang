@@ -1,0 +1,6 @@
+2. What's the smallest positive number with 21 divisors?
+
+Solution:
+21 divisors means either p^20 or p^6 q^2 so the answer is 2^20 or 2^6 * 3^2. 2^20 is smaller so the answer is 2^20.
+
+Out(1048576)

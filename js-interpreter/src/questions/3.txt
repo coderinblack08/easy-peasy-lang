@@ -1,0 +1,4 @@
+3. How many partitions does the number 20 have? 
+For example, the number 4 has partitions: 4, 3+1, 2+2, 2+1+1, 1+1+1+1.
+
+Challenge for you to solve using recursion

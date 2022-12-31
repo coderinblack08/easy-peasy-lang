@@ -44,7 +44,7 @@ func fib(n)
   return fib(n - 1) + fib(n - 2)
 end
 
-Out(fib(10)) # 55
+Out(fib(10))
 
 func factorial(n)
   if n < 2
@@ -54,7 +54,6 @@ func factorial(n)
 end
 
 Out(factorial(5)) # 120
-
 
 # simple while loop
 i = 0
